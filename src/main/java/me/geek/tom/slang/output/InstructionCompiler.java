@@ -44,11 +44,26 @@ public class InstructionCompiler {
                 return compileVarInsn(opcode, split[1], insn);
             case LDC:
                 return compileLdc(split[1].split(" ", 2));
+            case IINC:
+                return compileIinc(split[1].split(" "), insn);
             case RETURN:
                 return new InsnNode(opcode);
             default: {
                 return new InsnNode(opcode);
             }
+        }
+    }
+
+    private static AbstractInsnNode compileIinc(String[] pts, String line) throws IOException {
+        if (pts.length != 2) {
+            throw new IOException("Invalid method instruction: " + line);
+        }
+        try {
+            int var = Integer.parseInt(pts[0]);
+            int incr = Integer.parseInt(pts[1]);
+            return new IincInsnNode(var, incr);
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid number on line: " + line);
         }
     }
 
