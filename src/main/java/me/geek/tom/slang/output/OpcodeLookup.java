@@ -168,6 +168,7 @@ public class OpcodeLookup {
     });
 
     public static final Map<String, Integer> NAME_TO_OPCODE_LOOKUP = Util.make(new HashMap<>(), m -> {
+        m.put("LABEL", -1);
         m.put("NOP", 0);
         m.put("ACONST_NULL", 1);
         m.put("ICONST_M1", 2);

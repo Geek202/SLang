@@ -3,15 +3,20 @@ package me.geek.tom.slang;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import kotlin.NotImplementedError;
+import me.geek.tom.slang.disassembler.ClassParser;
 import me.geek.tom.slang.output.BytecodeCompiler;
 import me.geek.tom.slang.sourcefile.SourceFile;
+import okio.BufferedSink;
+import okio.Okio;
 import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Scanner;
 
 public class SLang {
 
@@ -36,7 +41,17 @@ public class SLang {
                 FileUtils.writeByteArrayToFile(options.output, writer.toByteArray());
             }
         } else if (options.mode == Mode.DISASSEMBLE) {
-            throw new NotImplementedError();
+            try (BufferedSink sink = Okio.buffer(Okio.sink(options.output))) {
+                ClassParser parser = new ClassParser();
+                parser.load(options.input);
+                parser.disassemble(s -> {
+                    try {
+                        sink.writeUtf8(s + "\n");
+                    } catch (IOException e) {
+                        throw new RuntimeException("disassembling", e);
+                    }
+                });
+            }
         }
     }
 
@@ -50,6 +65,6 @@ public class SLang {
     }
 
     public enum Mode {
-        ASSEMBLE, DISASSEMBLE;
+        ASSEMBLE, DISASSEMBLE
     }
 }

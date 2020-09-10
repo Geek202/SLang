@@ -1,4 +1,4 @@
-package me.geek.tom.slang.output;
+package me.geek.tom.slang;
 
 import org.objectweb.asm.tree.*;
 
@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class CompilerHelper {
+public class Helper {
 
     public static MethodNode createVoidMethod(int access, String name, String descriptor,
                                           String signature, String[] exceptions, Consumer<MethodNode> compiler) {
@@ -23,7 +23,7 @@ public class CompilerHelper {
      * @param access The access int
      * @return The Java string representation.
      */
-    public static String access(int access) {
+    public static List<String> accessList(int access) {
         List<String> builder = new ArrayList<>();
 
         if ((access & ACC_PRIVATE) != 0)
@@ -41,7 +41,11 @@ public class CompilerHelper {
         if ((access & ACC_NATIVE) != 0)
             builder.add("native");
 
-        return String.join(" ", builder);
+        return builder;
+    }
+
+    public static String access(int access) {
+        return String.join(" ", accessList(access));
     }
 
     public static String nodeDetails(AbstractInsnNode node) {
@@ -58,5 +62,15 @@ public class CompilerHelper {
             return "";
         }
         return node.getClass().getSimpleName();
+    }
+
+    public static String ldcToString(LdcInsnNode insn) {
+        if (insn.cst instanceof String)
+            return "s " + insn.cst;
+        if (insn.cst instanceof Float)
+            return "f " + insn.cst;
+        if (insn.cst instanceof Integer)
+            return "i "+ insn.cst;
+        return "<invalid instruction>";
     }
 }

@@ -4,12 +4,13 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
+import java.util.Map;
 
 import static org.objectweb.asm.Opcodes.*;
 
 public class InstructionCompiler {
 
-    public static AbstractInsnNode compileInsn(String insn) throws IOException {
+    public static AbstractInsnNode compileInsn(String insn, Map<Integer, LabelNode> labels) throws IOException {
         String[] split = insn.split(" ", 2);
         String opcodeName = split[0];
         int opcode = OpcodeLookup.NAME_TO_OPCODE_LOOKUP.get(opcodeName);
@@ -42,15 +43,68 @@ public class InstructionCompiler {
             case ASTORE:
             case RET:
                 return compileVarInsn(opcode, split[1], insn);
+            case BIPUSH:
+            case SIPUSH:
+            case NEWARRAY:
+                return compileIntInsn(opcode, split[1], insn);
             case LDC:
                 return compileLdc(split[1].split(" ", 2));
             case IINC:
                 return compileIinc(split[1].split(" "), insn);
+            case -1:
+                return compileLabelInsn(insn, split[1], labels);
+            case IFEQ:
+            case IFNE:
+            case IFLT:
+            case IFGE:
+            case IFGT:
+            case IFLE:
+            case IF_ICMPEQ:
+            case IF_ICMPNE:
+            case IF_ICMPLT:
+            case IF_ICMPGE:
+            case IF_ICMPGT:
+            case IF_ICMPLE:
+            case IF_ACMPEQ:
+            case IF_ACMPNE:
+            case GOTO:
+            case JSR:
+            case IFNULL:
+            case IFNONNULL:
+                return compileJumpInsn(insn, opcode, split[1], labels);
             case RETURN:
                 return new InsnNode(opcode);
             default: {
                 return new InsnNode(opcode);
             }
+        }
+    }
+
+    private static AbstractInsnNode compileJumpInsn(String line, int opcode, String name, Map<Integer, LabelNode> labels) throws IOException {
+        try {
+            int id = Integer.parseInt(name);
+            LabelNode lbl = labels.computeIfAbsent(id, __ -> new LabelNode());
+            return new JumpInsnNode(opcode, lbl);
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid number on line: " + line);
+        }
+    }
+
+    private static AbstractInsnNode compileLabelInsn(String line, String name, Map<Integer, LabelNode> labels) throws IOException {
+        try {
+            int id = Integer.parseInt(name);
+            return labels.computeIfAbsent(id, __ -> new LabelNode());
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid number on line: " + line);
+        }
+    }
+
+    private static AbstractInsnNode compileIntInsn(int opcode, String num, String line) throws IOException {
+        try {
+            int val = Integer.parseInt(num);
+            return new IntInsnNode(opcode, val);
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid number on line: " + line);
         }
     }
 

@@ -4,7 +4,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import static org.objectweb.asm.Opcodes.*;
 
-import me.geek.tom.slang.output.CompilerHelper;
 import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.*;
@@ -45,7 +44,7 @@ public class HelloWorldCompiler {
     }
 
     private static MethodNode compileMain() {
-        return CompilerHelper.createVoidMethod(
+        return Helper.createVoidMethod(
                 ACC_PUBLIC + ACC_STATIC,
                 "main",
                 "([Ljava/lang/String;)V",
@@ -65,7 +64,7 @@ public class HelloWorldCompiler {
     }
 
     public static MethodNode compileEmptyConstructor() {
-        return CompilerHelper.createVoidMethod(
+        return Helper.createVoidMethod(
                 ACC_PUBLIC,
                 "<init>",
                 "()V",

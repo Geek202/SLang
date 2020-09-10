@@ -6,16 +6,19 @@ import me.geek.tom.slang.sourcefile.nodes.ClsNode;
 import me.geek.tom.slang.sourcefile.nodes.FieldNode;
 import me.geek.tom.slang.sourcefile.nodes.MethodNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.LabelNode;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.objectweb.asm.Opcodes.*;
 
 public class BytecodeCompiler {
 
-    private List<ClassNode> classes;
+    private final List<ClassNode> classes;
 
     public BytecodeCompiler() {
         this.classes = new ArrayList<>();
@@ -55,8 +58,15 @@ public class BytecodeCompiler {
         for (String access : method.getAccess()) {
             node.access += AccessLookup.NAME_TO_CODE_LOOKUP.get(access);
         }
+        Map<Integer, LabelNode> labels = new HashMap<>();
         for (String insn : method.getInsns()) {
-            node.instructions.add(InstructionCompiler.compileInsn(insn));
+            try {
+                node.instructions.add(InstructionCompiler.compileInsn(insn, labels));
+            } catch (IOException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException("unexpected error on line: " + insn, e);
+            }
         }
         return node;
     }
